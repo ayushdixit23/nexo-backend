@@ -1,0 +1,40 @@
+{
+  "compilerOptions": {
+    /* Basic Options */
+    "target": "ES6", // Specifies the ECMAScript target version: ES5, ES6/ES2015, etc.
+    "module": "ESNext", // Specifies the module code generation: "CommonJS", "ES6", "ES2020", etc.
+    "rootDir": "./src", // Root directory of input files.
+    "outDir": "./dist", // Directory to output compiled JavaScript files.
+
+    /* Strict Type-Checking Options */
+    "strict": true, // Enable all strict type-checking options.
+    "noImplicitAny": true, // Raise error on expressions and declarations with an implied `any` type.
+    "strictNullChecks": true, // Enable strict null checks.
+    "strictBindCallApply": true, // Check parameter types for `bind`, `call`, and `apply`.
+    "strictFunctionTypes": true, // Ensure type safety for function arguments and return types.
+    "noImplicitThis": true, // Ensure `this` is correctly typed.
+
+    /* Module Resolution Options */
+    "moduleResolution": "node", // Use Node.js-style module resolution.
+    "esModuleInterop": true, // Enable `import x from 'y'` syntactic sugar.
+
+    /* JavaScript Support */
+    "allowJs": true, // Allow JavaScript files to be compiled.
+    "checkJs": false, // Disable error reporting in JavaScript files.
+
+    /* Source Map Options */
+    "sourceMap": true, // Generate source maps for debugging.
+    "inlineSourceMap": false, // Don't inline the source map.
+
+    /* Other Options */
+    "skipLibCheck": true, // Skip type checking for all declaration files (*.d.ts).
+    "forceConsistentCasingInFileNames": true // Ensure consistent casing in file names.
+  },
+  "include": [
+    "src" // Specify files or directories to be included in the compilation.
+  ],
+  "exclude": [
+    "node_modules", // Exclude `node_modules` from compilation.
+    "dist" // Exclude `dist` folder from being compiled again.
+  ]
+}
