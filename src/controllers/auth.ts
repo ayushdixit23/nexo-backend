@@ -1,9 +1,10 @@
 import User from "../models/user";
-import e, { Request, Response } from "express";
+import { Request, Response } from "express";
 import { v4 as uuid } from "uuid";
-import { BUCKET_NAME, URL } from "../utils/config";
+import { BUCKET_NAME } from "../utils/config";
 import { uploadToS3 } from "../utils/s3.config";
 import {
+  addProfilePicURL,
   errorResponse,
   generateToken,
   hashPassword,
@@ -54,7 +55,7 @@ export const createUser = async (
       fullname,
       email,
       password: hashPass,
-      profilepic
+      profilepic,
       // profilepic:
       //   "1733682022686-842b4107-2a47-4bca-8cd8-b644ef91ed01-PNG_00094.jpg",
     });
@@ -62,10 +63,10 @@ export const createUser = async (
     await user.save();
 
     const data = {
-      fullname: user.fullname,
-      email: user.email,
-      profilepic: user.profilepic,
       id: user._id,
+      fullname: user.fullname,
+      profilepic: addProfilePicURL(user.profilepic || ""),
+      email: user.email,
     };
 
     const token = await generateToken(data);
@@ -111,18 +112,55 @@ export const loginWithEmail = async (
         .json({ success: false, message: "Invalid credentials" });
     }
 
-    const data = {
-      id: user._id,
-      fullname: user.fullname,
-      profilepic: URL + user.profilepic,
-      email: user.email,
-    };
+    const organisation = await Organisation.find({
+      members: { $in: [user._id] },
+    });
+
+    let data = {};
+
+    if (organisation.length === 0) {
+      data = {
+        fullname: user.fullname,
+        email: user.email,
+        profilepic: addProfilePicURL(user.profilepic || ""),
+        id: user._id,
+      };
+    }
+
+    if (organisation.length > 1) {
+      data = {
+        fullname: user.fullname,
+        email: user.email,
+        profilepic: addProfilePicURL(user.profilepic || ""),
+        id: user._id,
+        organisations: organisation.map((org) => ({
+          name: org.name,
+          id: org._id,
+          dp: addProfilePicURL(org.dp || ""),
+        })),
+      };
+    }
+
+    if (organisation.length === 1) {
+      data = {
+        fullname: user.fullname,
+        email: user.email,
+        profilepic: addProfilePicURL(user.profilepic || ""),
+        id: user._id,
+     
+        organisationId: organisation[0]._id,
+      };
+    }
 
     const token = await generateToken(data);
 
-    res
-      .status(200)
-      .json({ success: true, message: "Login successful!", token, data });
+    res.status(200).json({
+      success: true,
+      message: "Login successful!",
+      token,
+      data,
+      organisationLength: organisation.length,
+    });
   } catch (error) {
     errorResponse(res, (error as Error).message);
   }
@@ -152,7 +190,7 @@ export const fetchData = async (
     const updatedData = {
       ...user,
       id: user._id,
-      profilepic: `${URL}${user.profilepic}`,
+      profilepic: addProfilePicURL(user.profilepic || ""),
     };
 
     res
@@ -160,203 +198,5 @@ export const fetchData = async (
       .json({ success: true, message: "User found", data: updatedData });
   } catch (error) {
     errorResponse(res, (error as Error).message);
-  }
-};
-
-export const createOrganisation = async (
-  req: Request,
-  res: Response
-): Promise<void | Response> => {
-  console.log("createOrganisation");
-  try {
-    const { id } = req.params;
-    const { name, code }: { name: string; code: string } = req.body;
-
-    if (!req.file) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Orgaination Picture is required" });
-    }
-
-    if (!name) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Orgaination Name is required" });
-    }
-
-    const user = await User.findById(id);
-
-    if (!user) {
-      return res
-        .status(404)
-        .json({ success: false, message: "User not found" });
-    }
-
-    // const file = req.file;
-    // const uuidString = uuid();
-    // const profilepic = Date.now() + "-" + uuidString + "-" + file?.originalname;
-
-    // uploadToS3(BUCKET_NAME, profilepic, file.buffer, file.mimetype);
-
-    const org = new Organisation({
-      name,
-      // dp: profilepic,
-      dp: "1733947944445-d8b6eda4-d76f-4e2a-80ba-63283249cb04-Group 1171277335.png",
-      creator: id,
-      members: [id],
-      code: code,
-    });
-
-    await org.save();
-
-    user.organisations.push(org._id);
-    await user.save();
-
-    const data = {
-      fullname: user.fullname,
-      email: user.email,
-      profilepic: URL + user.profilepic,
-      id: user._id,
-      organisationId: org._id,
-    };
-
-    res.status(200).json({
-      success: true,
-      message: "Organisation created successfully",
-      data,
-    });
-  } catch (error) {
-    errorResponse(res, (error as Error).message);
-  }
-};
-
-export const getOrganisations = async (
-  req: Request,
-  res: Response
-): Promise<void | Response> => {
-  try {
-    const organisations = await Organisation.find()
-      .select("name _id dp")
-      .lean();
-
-    const data = organisations.map((org) => ({
-      ...org,
-      id: org._id,
-      dp: `${URL}${org.dp}`,
-    }));
-    res.status(200).json({
-      success: true,
-      message: "Organisation fetched successfully",
-      data,
-    });
-  } catch (error) {
-    errorResponse(res, (error as Error).message);
-  }
-};
-
-export const searchOrganisation = async (
-  req: Request,
-  res: Response
-): Promise<void | Response> => {
-  try {
-    const { name } = req.query;
-    const organisations = await Organisation.find({
-      name: { $regex: name, $options: "i" },
-    })
-      .select("name _id dp")
-      .lean(); // Use $options: "i" for case-insensitive search
-    const data = organisations.map((org) => ({
-      ...org,
-      id: org._id,
-      dp: `${URL}${org.dp}`,
-    }));
-    res.status(200).json({
-      success: true,
-      message: "Organisation fetched successfully",
-      data,
-    });
-  } catch (error) {
-    errorResponse(res, (error as Error).message);
-  }
-};
-
-export const joinOrganisation = async (
-  req: Request,
-  res: Response
-): Promise<Response | void> => {
-  try {
-    const { id, orgId } = req.params;
-    const { code }: { code: string } = req.body;
-
-    // Validate request parameters
-    if (!id || !orgId || !code) {
-      return res.status(400).json({
-        success: false,
-        message: "Missing required fields: id, orgId, or code.",
-      });
-    }
-
-    // Fetch user and organization in parallel
-    const [user, org] = await Promise.all([
-      User.findById(id),
-      Organisation.findById(orgId),
-    ]);
-
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found.",
-      });
-    }
-
-    if (!org) {
-      return res.status(404).json({
-        success: false,
-        message: "Organisation not found.",
-      });
-    }
-
-    // Verify the organization code
-    if (org.code !== code) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid code.",
-      });
-    }
-
-    // Check if the user is already a member of the organization
-    const isAlreadyMember = user.organisations.some(
-      (userOrgId) => userOrgId.toString() === org._id.toString()
-    );
-
-    if (isAlreadyMember) {
-      return res.status(203).json({
-        success: false,
-        message: "You are already a member of this organisation.",
-      });
-    }
-
-    // Add user to organization's members and organization to user's list
-    org.members.push(user._id);
-    user.organisations.push(org._id);
-
-    await Promise.all([org.save(), user.save()]);
-
-    const data = {
-      fullname: user.fullname,
-      email: user.email,
-      profilepic: URL + user.profilepic,
-      id: user._id,
-      organisationId: org._id,
-    };
-
-
-    return res.status(200).json({
-      success: true,
-      message: "Joined organisation successfully.",
-      data
-    });
-  } catch (error) {
-    return errorResponse(res, (error as Error).message);
   }
 };

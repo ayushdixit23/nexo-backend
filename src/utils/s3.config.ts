@@ -1,7 +1,7 @@
-import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
-import { AWS_ACCESS_KEY, AWS_SECRET_KEY, BUCKET_REGION } from "./config";
+import AWS from 'aws-sdk';
+import { AWS_ACCESS_KEY, AWS_SECRET_KEY, BUCKET_REGION } from './config';
 
-const s3 = new S3Client({
+const s3 = new AWS.S3({
   region: BUCKET_REGION,
   credentials: {
     accessKeyId: AWS_ACCESS_KEY,
@@ -16,14 +16,14 @@ const uploadToS3 = async (
   contentType: string
 ): Promise<void> => {
   try {
-    await s3.send(
-      new PutObjectCommand({
+    await s3
+      .putObject({
         Bucket: bucket,
         Key: key,
         Body: body,
         ContentType: contentType,
       })
-    );
+      .promise();
   } catch (error) {
     throw new Error("Failed to upload file to S3");
   }

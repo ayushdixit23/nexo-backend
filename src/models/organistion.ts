@@ -10,6 +10,8 @@ export interface IOrganisation extends Document {
   members: mongoose.Schema.Types.ObjectId[];
   teams: mongoose.Schema.Types.ObjectId[];
   code: string;
+  storage: mongoose.Schema.Types.ObjectId[];
+  storageused: number;
 }
 
 // Create the schema using the interface
@@ -47,6 +49,8 @@ const organisationSchema: Schema<IOrganisation> = new mongoose.Schema({
   code: {
     type: String,
   },
+  storage: [{ type: mongoose.Schema.Types.ObjectId, ref: "Storage" }],
+  storageused: { type: Number, default: 0 }, //in Gbs
 });
 
 const Organisation: Model<IOrganisation> = mongoose.model<IOrganisation>(

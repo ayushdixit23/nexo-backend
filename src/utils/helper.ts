@@ -1,7 +1,7 @@
 import { Response } from "express";
 import bcrypt from "bcrypt";
 import jwt, { JwtPayload } from "jsonwebtoken";
-import { JWT_SECRET } from "./config";
+import { JWT_SECRET, URL } from "./config";
 
 const hashPassword = async (password: string): Promise<string> => {
     const salt = await bcrypt.genSalt(10); // Ensure saltRounds is 10 or appropriate
@@ -37,10 +37,32 @@ const verifyToken = (token: string): JwtPayload | null => {
   }
 };
 
+const addProfilePicURL = (profilepic: string): string => `${URL}${profilepic}`;
+
+
+function convertSize(sizeInBytes: number) {
+  // (KB)
+  const sizeInKB = sizeInBytes / 1000;
+
+  // (MB)
+  const sizeInMB = sizeInKB / 1000;
+
+  // (GB)
+  const sizeInGB = sizeInMB / 1000;
+
+  return {
+    kb: sizeInKB.toFixed(2),
+    mb: sizeInMB.toFixed(2),
+    gb: sizeInGB.toFixed(2),
+  };
+}
+
 export {
   errorResponse,
+  addProfilePicURL,
   hashPassword,
   verifyPassword,
+  convertSize,
   generateToken,
   verifyToken,
 };

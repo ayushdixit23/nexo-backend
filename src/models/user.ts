@@ -8,7 +8,7 @@ export interface IUser extends Document {
   password: string;
   profilepic?: string;
   organisations: mongoose.Schema.Types.ObjectId[];
-  team: mongoose.Schema.Types.ObjectId[];
+  teams: mongoose.Schema.Types.ObjectId[];
 }
 
 // Create the schema using the interface
@@ -32,7 +32,7 @@ const userSchema: Schema<IUser> = new mongoose.Schema({
   organisations: [
     { type: mongoose.Schema.Types.ObjectId, ref: "Organisation" },
   ],
-  team: [
+  teams: [
     {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Team",

@@ -4,6 +4,7 @@ import morgan from "morgan";
 import { DATABASE, PORT } from "./utils/config";
 import connectDb from "./utils/db";
 import userRouter from "./routes/auth";
+import organisationRouter from "./routes/organisation";
 import { register, requestCount, requestDuration } from "./utils/metrics";
 
 const app = express();
@@ -31,6 +32,7 @@ app.use(cors());
 
 // Routes
 app.use("/api", userRouter);
+app.use("/api", organisationRouter);
 
 app.get("/metrics", async (req: Request, res: Response) => {
   res.set("Content-Type", register.contentType);
