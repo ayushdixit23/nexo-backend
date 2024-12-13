@@ -282,8 +282,8 @@ export const fetchMembersAndTeams = async (
         path: "teams",
         select: "name creator members",
         populate: [
-          { path: "creator", select: "fullname profilepic" },
-          { path: "members", select: "fullname profilepic" },
+          { path: "creator", select: "fullname profilepic email" },
+          { path: "members", select: "fullname profilepic email" },
         ],
       })
       .populate("members", "fullname profilepic email")
@@ -304,8 +304,11 @@ export const fetchMembersAndTeams = async (
         fullname: team.creator?.fullname || "N/A",
         profilepic: addProfilePicURL(team.creator?.profilepic || ""),
         id: team.creator?._id || "N/A",
+        email: team.creator?.email || "N/A",
       },
       members: team.members?.map((member: any) => ({
+        email: member.email || "N/A",
+        isJoined: true,
         fullname: member.fullname || "N/A",
         profilepic: addProfilePicURL(member.profilepic || ""),
         id: member._id || "N/A",

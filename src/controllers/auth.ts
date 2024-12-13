@@ -50,14 +50,11 @@ export const createUser = async (
 
     const hashPass = await hashPassword(password);
 
-    // const user = new User({ fullname, email, password: hashPass, profilepic });
     const user = new User({
       fullname,
       email,
       password: hashPass,
       profilepic,
-      // profilepic:
-      //   "1733682022686-842b4107-2a47-4bca-8cd8-b644ef91ed01-PNG_00094.jpg",
     });
 
     await user.save();
@@ -134,6 +131,7 @@ export const loginWithEmail = async (
         profilepic: addProfilePicURL(user.profilepic || ""),
         id: user._id,
         organisations: organisation.map((org) => ({
+          creator: org.creator,
           name: org.name,
           id: org._id,
           dp: addProfilePicURL(org.dp || ""),
@@ -147,7 +145,6 @@ export const loginWithEmail = async (
         email: user.email,
         profilepic: addProfilePicURL(user.profilepic || ""),
         id: user._id,
-     
         organisationId: organisation[0]._id,
       };
     }
@@ -196,6 +193,47 @@ export const fetchData = async (
     res
       .status(200)
       .json({ success: true, message: "User found", data: updatedData });
+  } catch (error) {
+    errorResponse(res, (error as Error).message);
+  }
+};
+
+export const updateProfile = async (
+  req: Request,
+  res: Response
+): Promise<void | Response> => {
+  try {
+    const { fullname, email } = req.body;
+    const { id } = req.params;
+
+    const user = await User.findById(id);
+
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+
+    if (req.file) {
+      const file = req.file;
+      const uuidString = uuid();
+      const profilepic =
+        Date.now() + "-" + uuidString + "-" + file?.originalname;
+
+      await uploadToS3(BUCKET_NAME, profilepic, file.buffer, file.mimetype);
+      user.profilepic = profilepic;
+    }
+
+    user.fullname = fullname;
+    user.email = email;
+
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Profile updated successfully",
+      data: user,
+    });
   } catch (error) {
     errorResponse(res, (error as Error).message);
   }
