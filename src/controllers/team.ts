@@ -3,7 +3,6 @@ import User from "../models/user";
 import Team from "../models/team";
 import { addProfilePicURL, errorResponse } from "../utils/helper";
 import Message from "../models/message";
-import mongoose from "mongoose";
 
 export const fetchTeams = async (req: Request, res: Response) => {
   try {
