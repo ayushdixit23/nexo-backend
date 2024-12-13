@@ -1,5 +1,5 @@
 import express from "express";
-import { fetchAllConversationsOfUser, fetchConversationsMesaages } from "../controllers/conversation";
+import { fetchAllConversationsOfUser, fetchConversationsMesaages, fetchTeamMessages } from "../controllers/conversation";
 const chatRouter = express.Router();
 
 chatRouter.get("/fetchAllConversationsOfUser/:id", async (req, res) => {
@@ -15,6 +15,17 @@ chatRouter.get(
     async (req, res) => {
         try {
             await fetchConversationsMesaages(req, res); // Call the controller to handle the response
+        } catch (error) {
+            console.log(error);
+        }
+    }
+);
+
+chatRouter.get(
+    "/fetchTeamMessages/:teamId",
+    async (req, res) => {
+        try {
+            await fetchTeamMessages(req, res); // Call the controller to handle the response
         } catch (error) {
             console.log(error);
         }

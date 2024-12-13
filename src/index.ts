@@ -9,6 +9,11 @@ import { register, requestCount, requestDuration } from "./utils/metrics";
 import http from "http";
 import { Server, Socket } from "socket.io";
 import chatRouter from "./routes/conversation";
+import {
+  storeMessageToDB,
+  storeMessageToDBForTeam,
+} from "./controllers/conversation";
+import teamRouter from "./routes/team";
 
 const app = express();
 
@@ -48,6 +53,7 @@ app.use(cors());
 app.use("/api", userRouter);
 app.use("/api", organisationRouter);
 app.use("/api", chatRouter);
+app.use("/api", teamRouter);
 
 app.get("/metrics", async (req: Request, res: Response) => {
   res.set("Content-Type", register.contentType);
@@ -71,7 +77,7 @@ io.use((socket: Socket, next) => {
 
     if (sessionID) {
       socket.join(sessionID);
-      console.log("Middleware ran for", sessionID);
+      console.log("Joined room", sessionID);
       return next();
     }
 
@@ -85,10 +91,26 @@ io.use((socket: Socket, next) => {
 io.on("connection", (socket: Socket) => {
   console.log(`A user connected with userId: ${socket.id}`);
 
-  socket.on("message", (data) => {
-    
+  socket.on("join-room", (roomId) => {
+    socket.join(roomId);
+    console.log(`${socket.id} joined room ${roomId}`);
+
   });
 
+  socket.on("leave-room", (roomId) => {
+    socket.leave(roomId);
+    console.log(`User with userId: ${socket.id} left room: ${roomId}`);
+  });
+
+  socket.on("message", async (data) => {
+    if (data.type === "team") {
+      socket.to(data.convId).emit("receive-message", data);
+      await storeMessageToDBForTeam(data);
+    } else {
+      socket.to(data.receiverid.id).emit("receive-message", data);
+      await storeMessageToDB(data);
+    }
+  });
   // Handle disconnect
   socket.on("disconnect", () => {
     console.log("A user disconnected");

@@ -1,8 +1,9 @@
 import { Request, Response } from "express";
 import Conversation from "../models/conversation";
 import { addProfilePicURL, errorResponse } from "../utils/helper";
-import Message from "../models/chats";
+import Message from "../models/message";
 import User from "../models/user";
+import Team from "../models/team";
 
 export const fetchAllConversationsOfUser = async (
   req: Request,
@@ -18,7 +19,10 @@ export const fetchAllConversationsOfUser = async (
       .populate("members", "fullname profilepic email")
       .populate({
         path: "message",
-        options: { sort: { createdAt: -1 }, limit: 1 },
+        options: {
+          sort: { date: -1 },
+          limit: 1,
+        },
       });
 
     // Format conversations and include the last message
@@ -30,9 +34,7 @@ export const fetchAllConversationsOfUser = async (
       // Get the last message, if it exists
       // @ts-ignore
       const lastMessage =
-        conversation.message.length > 0
-          ? conversation.message[conversation.message.length - 1]
-          : null;
+        conversation.message.length > 0 ? conversation.message[0] : null;
 
       return {
         id: conversation._id,
@@ -46,7 +48,7 @@ export const fetchAllConversationsOfUser = async (
         lastMessage: lastMessage
           ? {
               // @ts-ignore
-              text: lastMessage?.text || "",
+              message: lastMessage?.message || "",
               // @ts-ignore
               createdAt: lastMessage?.createdAt,
             }
@@ -100,6 +102,7 @@ export const fetchConversationsMesaages = async (
 
     // Prepare other user data
     const data = {
+      conversationId: conversation?._id,
       id: receiver._id,
       fullname: receiver.fullname,
       profilepic: addProfilePicURL(receiver.profilepic || ""),
@@ -166,5 +169,126 @@ export const fetchConversationsMesaages = async (
     });
   } catch (error) {
     return errorResponse(res, (error as Error).message);
+  }
+};
+
+export const storeMessageToDB = async (data: any) => {
+  const { convId, senderid, receiverid, message, date } = data;
+  try {
+    const conversation = await Conversation.findById(convId);
+    if (!conversation) {
+      return {
+        success: false,
+        message: "Conversation not found",
+      };
+    }
+    const newMessage = new Message({
+      senderid: senderid.id,
+      receiverid: receiverid.id,
+      message,
+      convId,
+      date,
+    });
+    await newMessage.save();
+    // @ts-ignore
+    conversation.message.push(newMessage._id);
+    await conversation.save();
+
+    console.log("Message stored successfully");
+
+    return { success: true, message: "Message received successfully" };
+  } catch (error) {
+    console.log(error);
+    return {
+      success: false,
+      message: "Failed to receive message",
+    };
+  }
+};
+
+export const fetchTeamMessages = async (req: Request, res: Response) => {
+  try {
+    const { teamId } = req.params;
+
+    const messages = await Message.find({ convId: teamId })
+      .populate("senderid", "fullname profilepic")
+      .populate("receiverid", "fullname profilepic")
+      .lean();
+
+    const team = await Team.findById(teamId)
+      .populate("members", "fullname profilepic")
+      .populate("creator", "fullname profilepic");
+
+    const teamData = {
+      id: team?._id,
+      name: team?.name,
+      creator: {
+        // @ts-ignore
+        id: team?.creator?._id,
+        // @ts-ignore
+        fullname: team?.creator?.fullname || "",
+        // @ts-ignore
+        profilepic: addProfilePicURL(team?.creator?.profilepic || ""),
+      },
+      members: team?.members.map((member: any) => ({
+        // @ts-ignore
+        id: member?._id,
+        // @ts-ignore
+        fullname: member?.fullname || "",
+        // @ts-ignore
+        profilepic: addProfilePicURL(member?.profilepic || ""),
+      })),
+    };
+
+    const formattedMessages = messages.map((message) => ({
+      ...message,
+      senderid: {
+        // @ts-ignore
+        id: message.senderid?._id,
+        // @ts-ignore
+        fullname: message.senderid?.fullname || "",
+        // @ts-ignore
+        profilepic: addProfilePicURL(message.senderid?.profilepic || ""),
+      },
+      receiverid: {
+        // @ts-ignore
+        id: message.receiverid?._id,
+        // @ts-ignore
+        fullname: message.receiverid?.fullname || "",
+        // @ts-ignore
+        profilepic: addProfilePicURL(message.receiverid?.profilepic || ""),
+      },
+    }));
+    return res.status(200).json({
+      success: true,
+      message: "Messages fetched successfully",
+      data: formattedMessages,
+      team: teamData,
+    });
+  } catch (error) {
+    return errorResponse(res, (error as Error).message);
+  }
+};
+
+export const storeMessageToDBForTeam = async (data: any) => {
+  const { convId, senderid, message, date } = data;
+  try {
+    const newMessage = new Message({
+      senderid: senderid.id,
+      message,
+      convId,
+      date,
+    });
+    await newMessage.save();
+
+    console.log("Team Message stored successfully");
+
+    return { success: true, message: "Message received successfully" };
+  } catch (error) {
+    console.log(error);
+    return {
+      success: false,
+      message: "Failed to receive message",
+    };
   }
 };

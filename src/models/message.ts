@@ -11,7 +11,7 @@ interface IMessage extends Document {
 const messageSchema = new Schema<IMessage>({
   convId: { type: String, required: true },
   senderid: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-  receiverid: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+  receiverid: { type: Schema.Types.ObjectId, ref: 'User' },
   message: { type: String, required: true },
   date: { type: Date, default: Date.now },
 });

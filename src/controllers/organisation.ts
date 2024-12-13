@@ -245,7 +245,12 @@ export const createTeam = async (
     }
 
     // Create a new team and add it to the organisation and user
-    const team = new Team({ name, organisation: orgId, creator: user._id });
+    const team = new Team({
+      name,
+      organisation: orgId,
+      creator: user._id,
+      members: [user._id],
+    });
 
     org.teams.push(team._id);
     user.teams.push(team._id);
