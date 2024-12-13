@@ -6,8 +6,22 @@ import connectDb from "./utils/db";
 import userRouter from "./routes/auth";
 import organisationRouter from "./routes/organisation";
 import { register, requestCount, requestDuration } from "./utils/metrics";
+import http from "http";
+import { Server, Socket } from "socket.io";
+import chatRouter from "./routes/conversation";
 
 const app = express();
+
+const server = http.createServer(app);
+
+// Initialize Socket.IO
+const io = new Server(server, {
+  cors: {
+    origin: "*", // Allow all origins (you may want to restrict this in production)
+    methods: ["GET", "POST"],
+  },
+});
+
 // Middleware for logging
 app.use(morgan("dev"));
 
@@ -33,6 +47,7 @@ app.use(cors());
 // Routes
 app.use("/api", userRouter);
 app.use("/api", organisationRouter);
+app.use("/api", chatRouter);
 
 app.get("/metrics", async (req: Request, res: Response) => {
   res.set("Content-Type", register.contentType);
@@ -50,6 +65,36 @@ app.get("/", (req: Request, res: Response) => {
     .json({ success: true, message: "Hello, Nexo server is running!" });
 });
 
+io.use((socket: Socket, next) => {
+  try {
+    const sessionID = socket.handshake.auth.id;
+
+    if (sessionID) {
+      socket.join(sessionID);
+      console.log("Middleware ran for", sessionID);
+      return next();
+    }
+
+    return next(new Error("Authentication failed: Missing sessionID"));
+  } catch (error) {
+    console.error("Error in socket middleware:", error);
+    return next(new Error("Internal server error"));
+  }
+});
+
+io.on("connection", (socket: Socket) => {
+  console.log(`A user connected with userId: ${socket.id}`);
+
+  socket.on("message", (data) => {
+    
+  });
+
+  // Handle disconnect
+  socket.on("disconnect", () => {
+    console.log("A user disconnected");
+  });
+});
+
 // Server startup logic
 const startServer = async () => {
   try {
@@ -57,7 +102,7 @@ const startServer = async () => {
     await connectDb(DATABASE);
 
     // Start the server
-    app.listen(PORT, () => {
+    server.listen(PORT, () => {
       console.log(`Server is running on ${PORT}`);
     });
   } catch (error) {

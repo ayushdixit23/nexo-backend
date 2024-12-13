@@ -7,6 +7,8 @@ export interface Team extends Document {
   organisation: mongoose.Schema.Types.ObjectId;
   members: mongoose.Schema.Types.ObjectId[];
   creator: mongoose.Schema.Types.ObjectId;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 // Create the schema using the interface
@@ -30,7 +32,8 @@ const teamSchema: Schema<Team> = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
   },
-});
+},{
+  timestamps: true});
 
 // Create the model
 const Team: Model<Team> = mongoose.model<Team>("Team", teamSchema);

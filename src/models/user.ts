@@ -9,36 +9,41 @@ export interface IUser extends Document {
   profilepic?: string;
   organisations: mongoose.Schema.Types.ObjectId[];
   teams: mongoose.Schema.Types.ObjectId[];
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 // Create the schema using the interface
-const userSchema: Schema<IUser> = new mongoose.Schema({
-  fullname: {
-    type: String,
-    required: true,
-  },
-  email: {
-    type: String,
-    required: true,
-    unique: true,
-  },
-  password: {
-    type: String,
-    required: true,
-  },
-  profilepic: {
-    type: String,
-  },
-  organisations: [
-    { type: mongoose.Schema.Types.ObjectId, ref: "Organisation" },
-  ],
-  teams: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Team",
+const userSchema: Schema<IUser> = new mongoose.Schema(
+  {
+    fullname: {
+      type: String,
+      required: true,
     },
-  ],
-});
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+    },
+    password: {
+      type: String,
+      required: true,
+    },
+    profilepic: {
+      type: String,
+    },
+    organisations: [
+      { type: mongoose.Schema.Types.ObjectId, ref: "Organisation" },
+    ],
+    teams: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Team",
+      },
+    ],
+  },
+  { timestamps: true }
+);
 
 // Create the model
 const User: Model<IUser> = mongoose.model<IUser>("User", userSchema);

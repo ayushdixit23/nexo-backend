@@ -8,6 +8,8 @@ export interface IStorage extends Document {
     date: Date;
     type: string;
     size: number;
+    createdAt?: Date;
+    updatedAt?: Date;
 }
 
 // Create the schema using the interface
