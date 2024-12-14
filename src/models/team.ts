@@ -7,6 +7,7 @@ export interface Team extends Document {
   organisation: mongoose.Schema.Types.ObjectId;
   members: mongoose.Schema.Types.ObjectId[];
   creator: mongoose.Schema.Types.ObjectId;
+  tasks: mongoose.Schema.Types.ObjectId[];
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -32,6 +33,12 @@ const teamSchema: Schema<Team> = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
   },
+  tasks: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Task",
+    },
+  ]
 },{
   timestamps: true});
 

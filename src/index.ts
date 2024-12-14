@@ -14,6 +14,7 @@ import {
   storeMessageToDBForTeam,
 } from "./controllers/conversation";
 import teamRouter from "./routes/team";
+import tasksRouter from "./routes/tasks";
 
 const app = express();
 
@@ -54,6 +55,7 @@ app.use("/api", userRouter);
 app.use("/api", organisationRouter);
 app.use("/api", chatRouter);
 app.use("/api", teamRouter);
+app.use("/api", tasksRouter)
 
 app.get("/metrics", async (req: Request, res: Response) => {
   res.set("Content-Type", register.contentType);

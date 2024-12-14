@@ -9,6 +9,7 @@ export interface IUser extends Document {
   profilepic?: string;
   organisations: mongoose.Schema.Types.ObjectId[];
   teams: mongoose.Schema.Types.ObjectId[];
+  tasks: mongoose.Schema.Types.ObjectId[];
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -41,6 +42,12 @@ const userSchema: Schema<IUser> = new mongoose.Schema(
         ref: "Team",
       },
     ],
+    tasks: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Task",
+      },
+    ]
   },
   { timestamps: true }
 );
