@@ -2,7 +2,9 @@ import express from "express";
 import {
   createUser,
   fetchData,
+  fetchSomeDetails,
   loginWithEmail,
+  saveCode,
   updateProfile,
 } from "../controllers/auth";
 import upload from "../middleware/multer";
@@ -37,6 +39,14 @@ userRouter.get(
 
 userRouter.post("/updateProfile/:id",upload.single("profilepic"), async (req, res) => {
   await updateProfile(req, res); // Make sure the controller doesn't return a response, just handles it
+});
+
+userRouter.get("/fetchSomeDetails/:id/:orgId", async (req, res) => {
+  await fetchSomeDetails(req, res); // Make sure the controller doesn't return a response, just handles it
+});
+
+userRouter.post("/saveCode/:id/:orgId", async (req, res) => {
+  await saveCode(req, res); // Make sure the controller doesn't return a response, just handles it
 });
 
 export default userRouter;

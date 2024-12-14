@@ -30,6 +30,7 @@ export const createIndividualTask = async (req: Request, res: Response) => {
     return res.status(200).json({
       success: true,
       message: "Task created successfully.",
+      taskId: newTask._id,
     });
   } catch (error) {
     console.log(error);
@@ -104,6 +105,7 @@ export const createTeamTask = async (req: Request, res: Response) => {
     return res.status(200).json({
       success: true,
       message: "Task created successfully.",
+      taskId: newTask._id,
     });
   } catch (error) {
     console.error(error);
@@ -217,6 +219,58 @@ export const fetchTasks = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.log(error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error.",
+    });
+  }
+};
+
+export const updateTasksStatus = async (req: Request, res: Response) => {
+    console.log("first")
+  try {
+    const {taskId, userId } = req.params;
+    const { status } = req.body;
+
+    // Find the task by ID
+
+    const user = await User.exists({ _id: userId });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found.",
+      });
+    }
+
+    const task = await Task.findById(taskId);
+
+    if (!task) {
+      return res.status(404).json({
+        success: false,
+        message: "Task not found.",
+      });
+    }
+
+    if (task.creator.toString() !== userId) {
+      return res.status(401).json({
+        success: false,
+        message: "You are not authorized to update this task.",
+      });
+    }
+
+    // Update the task status
+    task.status = status;
+
+    // Save the updated task
+    await task.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Task status updated successfully.",
+    });
+  } catch (error) {
+    console.error(error);
     return res.status(500).json({
       success: false,
       message: "Internal server error.",

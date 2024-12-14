@@ -18,7 +18,7 @@ const tasksSchema: Schema<ITasks> = new mongoose.Schema(
     creator: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     status: {
       type: String,
-      enum: ["pending", "completed", "cancelled", "inprogress"],
+      enum: ["pending", "completed", "cancelled", "in progress"],
       default: "pending",
     },
     orgId: { type: mongoose.Schema.Types.ObjectId, ref: "Organisation" },

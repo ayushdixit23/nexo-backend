@@ -238,3 +238,72 @@ export const updateProfile = async (
     errorResponse(res, (error as Error).message);
   }
 };
+
+export const fetchSomeDetails = async (
+  req: Request,
+  res: Response
+): Promise<void | Response> => {
+  try {
+    const { id, orgId } = req.params;
+    const user = await User.findById(id).lean();
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+    //  check if user is created any organisation
+    const org = await Organisation.findById(orgId).lean();
+    if (org?.creator.toString() === user._id.toString()) {
+      return res.status(200).json({
+        success: true,
+        message: "User found",
+        isCreator: true,
+        code: org.code,
+        name: org.name,
+      });
+    } else {
+      return res.status(200).json({
+        success: true,
+        message: "User found",
+        isCreator: false,
+        name: org.name,
+      });
+    }
+  } catch (error) {
+    errorResponse(res, (error as Error).message);
+  }
+};
+
+export const saveCode = async (
+  req: Request,
+  res: Response
+): Promise<void | Response> => {
+  try {
+    const { id, orgId } = req.params;
+    const { code } = req.body;
+    const user = await User.findById(id).lean();
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+    //  check if user is created any organisation
+    const org = await Organisation.findById(orgId);
+    if (org?.creator.toString() === user._id.toString()) {
+      org.code = code;
+      await org.save();
+
+      return res.status(200).json({
+        success: true,
+        message: "Code saved successfully",
+      });
+    } else {
+      return res.status(400).json({
+        success: false,
+        message: "Not allowed to change organisation code",
+      });
+    }
+  } catch (error) {
+    errorResponse(res, (error as Error).message);
+  }
+};

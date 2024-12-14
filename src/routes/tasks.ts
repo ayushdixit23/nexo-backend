@@ -3,6 +3,7 @@ import {
   createIndividualTask,
   createTeamTask,
   fetchTasks,
+  updateTasksStatus,
 } from "../controllers/tasks";
 const tasksRouter = express.Router();
 
@@ -24,6 +25,10 @@ tasksRouter.post("/createTeamTask/:id/:orgId", async (req, res) => {
 
 tasksRouter.get("/fetchTasks/:id/:orgId", async (req, res) => {
   await fetchTasks(req, res);
+});
+
+tasksRouter.post("/updateTasksStatus/:taskId/:userId", async (req, res) => {
+  await updateTasksStatus(req, res);
 });
 
 export default tasksRouter;
