@@ -55,7 +55,7 @@ app.use("/api", userRouter);
 app.use("/api", organisationRouter);
 app.use("/api", chatRouter);
 app.use("/api", teamRouter);
-app.use("/api", tasksRouter)
+app.use("/api", tasksRouter);
 
 app.get("/metrics", async (req: Request, res: Response) => {
   res.set("Content-Type", register.contentType);
@@ -73,7 +73,7 @@ app.get("/", (req: Request, res: Response) => {
     .json({ success: true, message: "Hello, Nexo server is running!" });
 });
 
-io.use((socket: Socket, next) => {
+io.use((socket: Socket, next:any) => {
   try {
     const sessionID = socket.handshake.auth.id;
 
@@ -93,18 +93,17 @@ io.use((socket: Socket, next) => {
 io.on("connection", (socket: Socket) => {
   console.log(`A user connected with userId: ${socket.id}`);
 
-  socket.on("join-room", (roomId) => {
+  socket.on("join-room", (roomId:string) => {
     socket.join(roomId);
     console.log(`${socket.id} joined room ${roomId}`);
-
   });
 
-  socket.on("leave-room", (roomId) => {
+  socket.on("leave-room", (roomId:string) => {
     socket.leave(roomId);
     console.log(`User with userId: ${socket.id} left room: ${roomId}`);
   });
 
-  socket.on("message", async (data) => {
+  socket.on("message", async (data: any) => {
     if (data.type === "team") {
       socket.to(data.convId).emit("receive-message", data);
       await storeMessageToDBForTeam(data);

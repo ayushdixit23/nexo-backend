@@ -29,4 +29,15 @@ const uploadToS3 = async (
   }
 };
 
-export { s3, uploadToS3 };
+const generatePresignedDownloadUrl = (bucketName: string, key: string) => {
+  const params = {
+    Bucket: bucketName,
+    Key: key,
+    Expires: 60 * 5,  // URL expires in 5 minutes
+  };
+
+  return s3.getSignedUrl('getObject', params);
+};
+
+
+export { s3, uploadToS3,generatePresignedDownloadUrl };

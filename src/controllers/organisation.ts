@@ -2,7 +2,11 @@ import User from "../models/user";
 import { Request, Response } from "express";
 import { v4 as uuid } from "uuid";
 import { BUCKET_NAME } from "../utils/config";
-import { s3, uploadToS3 } from "../utils/s3.config";
+import {
+  generatePresignedDownloadUrl,
+  s3,
+  uploadToS3,
+} from "../utils/s3.config";
 import { addProfilePicURL, convertSize, errorResponse } from "../utils/helper";
 import Organisation from "../models/organistion";
 import Team from "../models/team";
@@ -459,9 +463,87 @@ export const addStorage = async (req: Request, res: Response) => {
     return res.status(200).json({
       success: true,
       message: "Storage added successfully.",
+      storageId: storage._id,
     });
   } catch (error) {
     console.error("Error adding storage:", error);
+    return errorResponse(res, (error as Error).message);
+  }
+};
+
+export const deleteStorage = async (req: Request, res: Response) => {
+  try {
+    const { userId, id, orgId } = req.params;
+    // Find organisation by ID
+    const org = await Organisation.findById(orgId).select("storageused _id"); // Using lean for better performance
+
+    const user = await User.exists({ _id: userId });
+
+    console.log(userId, id, orgId, "ids");
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found.",
+      });
+    }
+
+    if (!org) {
+      return res.status(404).json({
+        success: false,
+        message: "Organisation not found.",
+      });
+    }
+
+    // Find storage by ID
+    const storage = await Storage.findById(id);
+
+    if (!storage) {
+      return res.status(404).json({
+        success: false,
+        message: "Storage not found.",
+      });
+    }
+
+    if (storage.userid.toString() !== userId) {
+      return res.status(401).json({
+        success: false,
+        message: "You are not authorized to delete this storage.",
+      });
+    }
+
+    // Update organisation with new storage details
+    await Organisation.findByIdAndUpdate(
+      orgId,
+      {
+        $inc: { storageused: -storage.size },
+        $pull: { storage: storage._id },
+      },
+      { new: true }
+    );
+
+    // Delete storage document
+    await Storage.findByIdAndDelete(id);
+
+    // Delete file from S3
+
+    try {
+      await s3
+        .deleteObject({
+          Bucket: BUCKET_NAME,
+          Key: storage.filename,
+        })
+        .promise();
+    } catch (error) {
+      console.log("Error deleting file from S3:", error);
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Storage deleted successfully.",
+    });
+  } catch (error) {
+    console.error("Error deleting storage:", error);
     return errorResponse(res, (error as Error).message);
   }
 };
@@ -503,5 +585,32 @@ export const fetchStorage = async (req: Request, res: Response) => {
   } catch (error) {
     console.error("Error fetching storage:", error);
     return errorResponse(res, (error as Error).message);
+  }
+};
+
+export const downLoadFileFromStorage = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const storage = await Storage.findById(id);
+
+    if (!storage) {
+      return res.status(404).json({
+        success: false,
+        message: "Storage not found.",
+      });
+    }
+
+    const downloadUrl = generatePresignedDownloadUrl(
+      BUCKET_NAME,
+      storage.filename
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Storage fetched successfully.",
+      downloadUrl,
+    });
+  } catch (error) {
+    errorResponse(res, (error as Error).message);
   }
 };

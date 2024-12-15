@@ -1,9 +1,11 @@
 import express from "express";
 import upload from "../middleware/multer";
 import {
-    addStorage,
+  addStorage,
   createOrganisation,
   createTeam,
+  deleteStorage,
+  downLoadFileFromStorage,
   fetchMembersAndTeams,
   fetchStorage,
   generatePresignedUrl,
@@ -82,12 +84,30 @@ organisationRouter.post("/addStorage/:id/:orgId", async (req, res) => {
   }
 });
 
-
-organisationRouter.get("/fetchStorage/:orgId", async (req, res) => {
+organisationRouter.delete(
+  "/deleteStorage/:userId/:id/:orgId",
+  async (req, res) => {
     try {
-      await fetchStorage(req, res); // Call the controller to handle the response
+      await deleteStorage(req, res); // Call the controller to handle the response
     } catch (error) {
       console.log(error);
     }
-  });
+  }
+);
+
+organisationRouter.get("/generate-download-url/:id", async (req, res) => {
+  try {
+    await downLoadFileFromStorage(req, res); // Call the controller to handle the response
+  } catch (error) {
+    console.log(error);
+  }
+});
+
+organisationRouter.get("/fetchStorage/:orgId", async (req, res) => {
+  try {
+    await fetchStorage(req, res); // Call the controller to handle the response
+  } catch (error) {
+    console.log(error);
+  }
+});
 export default organisationRouter;
