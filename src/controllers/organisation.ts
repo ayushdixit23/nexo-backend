@@ -343,26 +343,47 @@ export const fetchMembersAndTeams = async (
 };
 
 export const generatePresignedUrl = async (req: Request, res: Response) => {
-  const { filename, filetype, orgId } = req.body; // Get filename and filetype from request
+  const { filename, filetype, orgId, isIndividual, userId } = req.body; // Get filename and filetype from request
   try {
-    const organisation = await Organisation.findById(orgId).select(
-      "storageused"
-    );
+   
+    if (isIndividual) {
+      const user = await User.findById(userId).select("storageused");
 
-    if (!organisation) {
-      return res.status(404).json({
-        success: false,
-        message: "Organisation not found.",
-      });
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          message: "User not found.",
+        });
+      }
+
+      if (user.storageused > 5 * 1024 * 1024) {
+        return res.status(400).json({
+          success: false,
+          message: "Storage limit exceeded.",
+          openPop: true,
+        });
+      }
+    } else {
+      const organisation = await Organisation.findById(orgId).select(
+        "storageused"
+      );
+
+      if (!organisation) {
+        return res.status(404).json({
+          success: false,
+          message: "Organisation not found.",
+        });
+      }
+
+      if (organisation.storageused > 10 * 1024 * 1024) {
+        return res.status(400).json({
+          success: false,
+          message: "Storage limit exceeded.",
+          openPop: true,
+        });
+      }
     }
 
-    if (organisation.storageused > 10 * 1024 * 1024) {
-      return res.status(400).json({
-        success: false,
-        message: "Storage limit exceeded.",
-        openPop: true,
-      });
-    }
     const uuidString = uuid();
     const uploadedFileName = `${Date.now()}-${uuidString}-${filename}`; // Ensure proper string formatting
 
@@ -398,10 +419,83 @@ export const generatePresignedUrl = async (req: Request, res: Response) => {
   }
 };
 
+// export const addStorage = async (req: Request, res: Response) => {
+//   try {
+//     const { id } = req.params;
+//     const { size, filename, filetype, orgId } = req.body;
+
+//     // Validate input
+//     if (!size || !filename || !filetype) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Missing required fields: size, filename, or filetype.",
+//       });
+//     }
+
+//     if (size <= 0) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Invalid size. Size must be greater than 0.",
+//       });
+//     }
+
+//     const user = await User.exists({ _id: id });
+
+//     if (!user) {
+//       return res.status(404).json({
+//         success: false,
+//         message: "User not found.",
+//       });
+//     }
+
+//     // Find organisation by ID
+//     const org = await Organisation.exists({ _id: orgId }); // Using lean for better performance
+
+//     if (!org) {
+//       return res.status(404).json({
+//         success: false,
+//         message: "Organisation not found.",
+//       });
+//     }
+
+//     // Convert size to KB
+//     const sizes = convertSize(Number(size));
+
+//     // Create and save storage document
+//     const storage = await Storage.create({
+//       size: sizes.kb,
+//       date: new Date(),
+//       orgid: orgId,
+//       filename,
+//       type: filetype,
+//       userid: id,
+//     });
+
+//     // Update organisation with new storage details
+//     await Organisation.findByIdAndUpdate(
+//       orgId,
+//       {
+//         $inc: { storageused: sizes.kb },
+//         $addToSet: { storage: storage._id },
+//       },
+//       { new: true }
+//     );
+
+//     return res.status(200).json({
+//       success: true,
+//       message: "Storage added successfully.",
+//       storageId: storage._id,
+//     });
+//   } catch (error) {
+//     console.error("Error adding storage:", error);
+//     return errorResponse(res, (error as Error).message);
+//   }
+// };
+
 export const addStorage = async (req: Request, res: Response) => {
   try {
-    const { id, orgId } = req.params;
-    const { size, filename, filetype } = req.body;
+    const { id } = req.params;
+    const { size, filename, filetype, orgId } = req.body;
 
     // Validate input
     if (!size || !filename || !filetype) {
@@ -418,8 +512,8 @@ export const addStorage = async (req: Request, res: Response) => {
       });
     }
 
+    // Validate user existence
     const user = await User.exists({ _id: id });
-
     if (!user) {
       return res.status(404).json({
         success: false,
@@ -427,38 +521,55 @@ export const addStorage = async (req: Request, res: Response) => {
       });
     }
 
-    // Find organisation by ID
-    const org = await Organisation.exists({ _id: orgId }); // Using lean for better performance
-
-    if (!org) {
-      return res.status(404).json({
-        success: false,
-        message: "Organisation not found.",
-      });
+    // Validate organisation existence if orgId is provided
+    if (orgId) {
+      const org = await Organisation.exists({ _id: orgId });
+      if (!org) {
+        return res.status(404).json({
+          success: false,
+          message: "Organisation not found.",
+        });
+      }
     }
 
     // Convert size to KB
     const sizes = convertSize(Number(size));
 
     // Create and save storage document
-    const storage = await Storage.create({
+    const storageData: any = {
       size: sizes.kb,
       date: new Date(),
-      orgid: orgId,
       filename,
       type: filetype,
       userid: id,
-    });
+    };
 
-    // Update organisation with new storage details
-    await Organisation.findByIdAndUpdate(
-      orgId,
-      {
-        $inc: { storageused: sizes.kb },
-        $addToSet: { storage: storage._id },
-      },
-      { new: true }
-    );
+    if (orgId) storageData.orgid = orgId; // Add orgId only when provided
+
+    const storage = await Storage.create(storageData);
+
+    // Update user or organisation with storage details
+    if (orgId) {
+      // Update organisation
+      await Organisation.findByIdAndUpdate(
+        orgId,
+        {
+          $inc: { storageused: sizes.kb },
+          $addToSet: { storage: storage._id },
+        },
+        { new: true }
+      );
+    } else {
+      // Update user
+      await User.findByIdAndUpdate(
+        id,
+        {
+          $inc: { storageused: sizes.kb },
+          $addToSet: { storage: storage._id },
+        },
+        { new: true }
+      );
+    }
 
     return res.status(200).json({
       success: true,
@@ -548,6 +659,72 @@ export const deleteStorage = async (req: Request, res: Response) => {
   }
 };
 
+export const deleteStorageIndividual = async (req: Request, res: Response) => {
+  try {
+    const { userId, id } = req.params;
+   
+    const user = await User.findById(userId).select("storageused _id"); 
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found.",
+      });
+    }
+
+    // Find storage by ID
+    const storage = await Storage.findById(id);
+
+    if (!storage) {
+      return res.status(404).json({
+        success: false,
+        message: "Storage not found.",
+      });
+    }
+
+    if (storage.userid.toString() !== userId) {
+      return res.status(401).json({
+        success: false,
+        message: "You are not authorized to delete this storage.",
+      });
+    }
+
+    // Update organisation with new storage details
+    await User.findByIdAndUpdate(
+      userId,
+      {
+        $inc: { storageused: -storage.size },
+        $pull: { storage: storage._id },
+      },
+      { new: true }
+    );
+
+    // Delete storage document
+    await Storage.findByIdAndDelete(id);
+
+    // Delete file from S3
+
+    try {
+      await s3
+        .deleteObject({
+          Bucket: BUCKET_NAME,
+          Key: storage.filename,
+        })
+        .promise();
+    } catch (error) {
+      console.log("Error deleting file from S3:", error);
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Storage deleted successfully.",
+    });
+  } catch (error) {
+    console.error("Error deleting storage:", error);
+    return errorResponse(res, (error as Error).message);
+  }
+};
+
 export const fetchStorage = async (req: Request, res: Response) => {
   try {
     const { orgId } = req.params;
@@ -581,6 +758,55 @@ export const fetchStorage = async (req: Request, res: Response) => {
       message: "Storage fetched successfully.",
       storage,
       storageused: org.storageused,
+    });
+  } catch (error) {
+    console.error("Error fetching storage:", error);
+    return errorResponse(res, (error as Error).message);
+  }
+};
+
+export const fetchStorageIndividual = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    // Find organisation by ID
+    const user = await User.findById(id).select("storageused _id"); // Using lean for better performance
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found.",
+      });
+    }
+
+    const stor = await Storage.find({ userid: user._id })
+      .populate("userid", "fullname profilepic email")
+      .lean();
+
+    if (!stor) {
+      return res.status(404).json({
+        success: false,
+        message: "Storage not found.",
+        storage: [],
+        storageused: user.storageused,
+      });
+    }
+
+    const storage = stor.map((item: any) => {
+      return {
+        ...item,
+        userid: {
+          fullname: item?.userid?.fullname,
+          profilepic: addProfilePicURL(item?.userid?.profilepic || ""),
+          email: item?.userid?.email,
+        },
+      };
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Storage fetched successfully.",
+      storage,
+      storageused: user.storageused,
     });
   } catch (error) {
     console.error("Error fetching storage:", error);

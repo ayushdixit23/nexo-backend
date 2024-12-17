@@ -5,9 +5,11 @@ import {
   createOrganisation,
   createTeam,
   deleteStorage,
+  deleteStorageIndividual,
   downLoadFileFromStorage,
   fetchMembersAndTeams,
   fetchStorage,
+  fetchStorageIndividual,
   generatePresignedUrl,
   getOrganisations,
   joinOrganisation,
@@ -76,7 +78,7 @@ organisationRouter.post("/generatePresignedUrl", async (req, res) => {
   }
 });
 
-organisationRouter.post("/addStorage/:id/:orgId", async (req, res) => {
+organisationRouter.post("/addStorage/:id", async (req, res) => {
   try {
     await addStorage(req, res); // Call the controller to handle the response
   } catch (error) {
@@ -95,6 +97,17 @@ organisationRouter.delete(
   }
 );
 
+organisationRouter.delete(
+  "/deleteStorage/:userId/:id",
+  async (req, res) => {
+    try {
+      await deleteStorageIndividual(req, res); // Call the controller to handle the response
+    } catch (error) {
+      console.log(error);
+    }
+  }
+);
+
 organisationRouter.get("/generate-download-url/:id", async (req, res) => {
   try {
     await downLoadFileFromStorage(req, res); // Call the controller to handle the response
@@ -106,6 +119,14 @@ organisationRouter.get("/generate-download-url/:id", async (req, res) => {
 organisationRouter.get("/fetchStorage/:orgId", async (req, res) => {
   try {
     await fetchStorage(req, res); // Call the controller to handle the response
+  } catch (error) {
+    console.log(error);
+  }
+});
+
+organisationRouter.get("/fetchStorageIndividual/:id", async (req, res) => {
+  try {
+    await fetchStorageIndividual(req, res); // Call the controller to handle the response
   } catch (error) {
     console.log(error);
   }

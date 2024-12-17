@@ -21,7 +21,7 @@ export const createIndividualTask = async (req: Request, res: Response) => {
       text: task,
       type: "self",
       creator: id,
-      orgId,
+      orgId: orgId ? orgId : undefined,
     });
 
     await newTask.save();
@@ -45,8 +45,6 @@ export const createTeamTask = async (req: Request, res: Response) => {
   try {
     const { id, orgId } = req.params;
     const { task, selectedTeams } = req.body;
-
-    console.log(typeof selectedTeams, selectedTeams);
 
     // Verify user existence
     const userExists = await User.exists({ _id: id });
@@ -227,9 +225,9 @@ export const fetchTasks = async (req: Request, res: Response) => {
 };
 
 export const updateTasksStatus = async (req: Request, res: Response) => {
-    console.log("first")
+  console.log("first");
   try {
-    const {taskId, userId } = req.params;
+    const { taskId, userId } = req.params;
     const { status } = req.body;
 
     // Find the task by ID
@@ -271,6 +269,61 @@ export const updateTasksStatus = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error(error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error.",
+    });
+  }
+};
+
+export const fetchIndividualTasks = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const user = await User.findById(id).populate("tasks").lean();
+    
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found.",
+      });
+    }
+
+    // self tasks
+    const tasks = await Task.find({ _id: { $in: user.tasks } })
+      .populate("creator", "fullname profilepic email")
+      .lean();
+
+    if (!tasks) {
+      return res.status(204).json({
+        success: false,
+        message: "Tasks not found.",
+        tasks: [],
+      });
+    }
+
+    const formattedTasks = tasks.map((task) => {
+      return {
+        ...task,
+        id: task._id,
+        creator: {
+          // @ts-ignore
+          id: task.creator._id,
+          // @ts-ignore
+          fullname: task.creator.fullname,
+          // @ts-ignore
+          profilepic: addProfilePicURL(task.creator.profilepic || ""),
+          // @ts-ignore
+          email: task.creator.email,
+        },
+      };
+    });
+
+    return res.status(200).json({
+      success: true,
+      tasks: formattedTasks,
+      message: "Tasks fetched successfully.",
+    });
+  } catch (error) {
     return res.status(500).json({
       success: false,
       message: "Internal server error.",

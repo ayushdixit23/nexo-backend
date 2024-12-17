@@ -266,7 +266,7 @@ export const fetchSomeDetails = async (
         success: true,
         message: "User found",
         isCreator: false,
-        name: org.name,
+        name: org ? org.name : "",
       });
     }
   } catch (error) {

@@ -2,6 +2,7 @@ import express from "express";
 import {
   createIndividualTask,
   createTeamTask,
+  fetchIndividualTasks,
   fetchTasks,
   updateTasksStatus,
 } from "../controllers/tasks";
@@ -29,6 +30,10 @@ tasksRouter.get("/fetchTasks/:id/:orgId", async (req, res) => {
 
 tasksRouter.post("/updateTasksStatus/:taskId/:userId", async (req, res) => {
   await updateTasksStatus(req, res);
+});
+
+tasksRouter.get("/fetchIndividualTasks/:id", async (req, res) => {
+  await fetchIndividualTasks(req, res);
 });
 
 export default tasksRouter;

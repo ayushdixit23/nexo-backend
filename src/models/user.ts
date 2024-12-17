@@ -10,6 +10,8 @@ export interface IUser extends Document {
   organisations: mongoose.Schema.Types.ObjectId[];
   teams: mongoose.Schema.Types.ObjectId[];
   tasks: mongoose.Schema.Types.ObjectId[];
+  storage: mongoose.Schema.Types.ObjectId[];
+  storageused: number;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -47,7 +49,9 @@ const userSchema: Schema<IUser> = new mongoose.Schema(
         type: mongoose.Schema.Types.ObjectId,
         ref: "Task",
       },
-    ]
+    ],
+    storage: [{ type: mongoose.Schema.Types.ObjectId, ref: "Storage" }],
+    storageused: { type: Number, default: 0 }, //in Gbs
   },
   { timestamps: true }
 );
