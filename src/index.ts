@@ -1,7 +1,7 @@
 import express, { NextFunction, Request, Response } from "express";
 import cors from "cors";
 import morgan from "morgan";
-import { DATABASE, PORT } from "./utils/config";
+import { DATABASE, PORT } from "./utils/config.js";
 import connectDb from "./utils/db";
 import userRouter from "./routes/auth";
 import organisationRouter from "./routes/organisation";
