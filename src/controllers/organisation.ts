@@ -1,7 +1,7 @@
 import User from "../models/user";
 import { Request, Response } from "express";
 import { v4 as uuid } from "uuid";
-import { BUCKET_NAME } from "../utils/config";
+import { BUCKET_NAME, RAZORPAY_KEY_SECRET } from "../utils/config";
 import {
   generatePresignedDownloadUrl,
   s3,
@@ -347,7 +347,6 @@ export const fetchMembersAndTeams = async (
 export const generatePresignedUrl = async (req: Request, res: Response) => {
   const { filename, filetype, orgId, isIndividual, userId } = req.body; // Get filename and filetype from request
   try {
-
     if (isIndividual) {
       const user = await User.findById(userId).select("storageused");
 
@@ -849,7 +848,7 @@ export const createOrderRazoryPay = async (req: Request, res: Response) => {
 
     const options = {
       amount: amount,
-      currency: 'INR',
+      currency: "INR",
       receipt: `receipt#${Date.now()}`,
     };
 
@@ -862,21 +861,28 @@ export const createOrderRazoryPay = async (req: Request, res: Response) => {
   } catch (error) {
     errorResponse(res, (error as Error).message);
   }
-}
+};
 
 export const verifyPayment = async (req: Request, res: Response) => {
   try {
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
-    const generated_signature = crypto.createHmac('sha256', 'your_key_secret')
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } =
+      req.body;
+
+    const generated_signature = crypto
+      .createHmac("sha256", RAZORPAY_KEY_SECRET)
       .update(`${razorpay_order_id}|${razorpay_payment_id}`)
-      .digest('hex');
-  
+      .digest("hex");
+
     if (generated_signature === razorpay_signature) {
-      res.status(200).json({ success: true, message: 'Payment verified successfully' });
+      res
+        .status(200)
+        .json({ success: true, message: "Payment verified successfully" });
     } else {
-      res.status(400).json({ success: false, message: 'Invalid payment signature' });
+      res
+        .status(400)
+        .json({ success: false, message: "Invalid payment signature" });
     }
   } catch (error) {
     errorResponse(res, (error as Error).message);
   }
-}
+};
