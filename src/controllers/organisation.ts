@@ -11,6 +11,8 @@ import { addProfilePicURL, convertSize, errorResponse } from "../utils/helper";
 import Organisation from "../models/organistion";
 import Team from "../models/team";
 import Storage from "../models/storage";
+import { razorpay } from "../utils/razorpay";
+import crypto from "crypto";
 
 export const createOrganisation = async (
   req: Request,
@@ -345,7 +347,7 @@ export const fetchMembersAndTeams = async (
 export const generatePresignedUrl = async (req: Request, res: Response) => {
   const { filename, filetype, orgId, isIndividual, userId } = req.body; // Get filename and filetype from request
   try {
-   
+
     if (isIndividual) {
       const user = await User.findById(userId).select("storageused");
 
@@ -662,8 +664,8 @@ export const deleteStorage = async (req: Request, res: Response) => {
 export const deleteStorageIndividual = async (req: Request, res: Response) => {
   try {
     const { userId, id } = req.params;
-   
-    const user = await User.findById(userId).select("storageused _id"); 
+
+    const user = await User.findById(userId).select("storageused _id");
 
     if (!user) {
       return res.status(404).json({
@@ -840,3 +842,41 @@ export const downLoadFileFromStorage = async (req: Request, res: Response) => {
     errorResponse(res, (error as Error).message);
   }
 };
+
+export const createOrderRazoryPay = async (req: Request, res: Response) => {
+  try {
+    const { amount } = req.body;
+
+    const options = {
+      amount: amount,
+      currency: 'INR',
+      receipt: `receipt#${Date.now()}`,
+    };
+
+    const order = await razorpay.orders.create(options);
+    return res.status(200).json({
+      success: true,
+      message: "Order created successfully.",
+      order,
+    });
+  } catch (error) {
+    errorResponse(res, (error as Error).message);
+  }
+}
+
+export const verifyPayment = async (req: Request, res: Response) => {
+  try {
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+    const generated_signature = crypto.createHmac('sha256', 'your_key_secret')
+      .update(`${razorpay_order_id}|${razorpay_payment_id}`)
+      .digest('hex');
+  
+    if (generated_signature === razorpay_signature) {
+      res.status(200).json({ success: true, message: 'Payment verified successfully' });
+    } else {
+      res.status(400).json({ success: false, message: 'Invalid payment signature' });
+    }
+  } catch (error) {
+    errorResponse(res, (error as Error).message);
+  }
+}

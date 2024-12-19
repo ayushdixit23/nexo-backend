@@ -10,3 +10,5 @@ export const BUCKET_NAME: string = process.env.BUCKET_NAME || "";
 export const BUCKET_REGION: string = process.env.BUCKET_REGION || "";
 export const JWT_SECRET: string = process.env.JWT_SECRET || "";
 export const URL: string = process.env.URL || "";
+export const RAZORPAY_ID = process.env.RAZORPAY_ID || "";
+export const RAZORPAY_KEY_SECRET = process.env.RAZORPAY_KEY_SECRET || "";

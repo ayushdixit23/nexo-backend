@@ -2,6 +2,7 @@ import express from "express";
 import upload from "../middleware/multer";
 import {
   addStorage,
+  createOrderRazoryPay,
   createOrganisation,
   createTeam,
   deleteStorage,
@@ -14,6 +15,7 @@ import {
   getOrganisations,
   joinOrganisation,
   searchOrganisation,
+  verifyPayment,
 } from "../controllers/organisation";
 
 const organisationRouter = express.Router();
@@ -131,4 +133,22 @@ organisationRouter.get("/fetchStorageIndividual/:id", async (req, res) => {
     console.log(error);
   }
 });
+
+organisationRouter.post("/create-order/:id", async (req, res) => {
+  try {
+    await createOrderRazoryPay(req, res); // Call the controller to handle the response
+  } catch (error) {
+    console.log(error);
+  }
+});
+
+organisationRouter.post("/verify-signature", async (req, res) => {
+  try {
+    await verifyPayment(req, res); // Call the controller to handle the response
+  } catch (error) {
+    console.log(error);
+  }
+});
+
+
 export default organisationRouter;
