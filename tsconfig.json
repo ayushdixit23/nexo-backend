@@ -31,10 +31,10 @@
     "forceConsistentCasingInFileNames": true // Ensure consistent casing in file names.
   },
   "include": [
-    "src" // Specify files or directories to be included in the compilation.
+    "src/**/*" // Include all files in the `src` directory and subdirectories
   ],
   "exclude": [
-    "node_modules", // Exclude `node_modules` from compilation.
-    "dist" // Exclude `dist` folder from being compiled again.
+    "node_modules", // Exclude `node_modules`
+    "dist" // Exclude the `dist` folder
   ]
 }
