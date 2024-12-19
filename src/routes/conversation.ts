@@ -1,5 +1,5 @@
 import express from "express";
-import { fetchAllConversationsOfUser, fetchConversationsMesaages, fetchTeamMessages } from "../controllers/conversation";
+import { fetchAllConversationsOfUser, fetchConversationsMesaages, fetchTeamMessages } from "../controllers/conversation.js";
 const chatRouter = express.Router();
 
 chatRouter.get("/fetchAllConversationsOfUser/:id", async (req, res) => {

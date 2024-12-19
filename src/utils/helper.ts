@@ -1,7 +1,7 @@
 import { Response } from "express";
 import bcrypt from "bcrypt";
 import jwt, { JwtPayload } from "jsonwebtoken";
-import { JWT_SECRET, URL } from "./config";
+import { JWT_SECRET, URL } from "./config.js";
 
 const hashPassword = async (password: string): Promise<string> => {
     const salt = await bcrypt.genSalt(10); // Ensure saltRounds is 10 or appropriate

@@ -1,9 +1,9 @@
 import { Request, Response } from "express";
-import Conversation from "../models/conversation";
-import { addProfilePicURL, errorResponse } from "../utils/helper";
-import Message from "../models/message";
-import User from "../models/user";
-import Team from "../models/team";
+import Conversation from "../models/conversation.js";
+import { addProfilePicURL, errorResponse } from "../utils/helper.js";
+import Message from "../models/message.js";
+import User from "../models/user.js";
+import Team from "../models/team.js";
 
 export const fetchAllConversationsOfUser = async (
   req: Request,

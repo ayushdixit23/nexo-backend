@@ -6,9 +6,9 @@ import {
   loginWithEmail,
   saveCode,
   updateProfile,
-} from "../controllers/auth";
-import upload from "../middleware/multer";
-import { verifyTokenMiddleware } from "../middleware/token";
+} from "../controllers/auth.js";
+import upload from "../middleware/multer.js";
+import { verifyTokenMiddleware } from "../middleware/token.js";
 const userRouter = express.Router();
 
 userRouter.post("/register", upload.single("profilepic"), async (req, res) => {

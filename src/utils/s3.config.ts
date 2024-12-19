@@ -1,5 +1,5 @@
 import AWS from 'aws-sdk';
-import { AWS_ACCESS_KEY, AWS_SECRET_KEY, BUCKET_REGION } from './config';
+import { AWS_ACCESS_KEY, AWS_SECRET_KEY, BUCKET_REGION } from './config.js';
 
 const s3 = new AWS.S3({
   region: BUCKET_REGION,

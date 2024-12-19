@@ -1,5 +1,5 @@
 import express from "express";
-import { addMembersToTeam, fetchTeams } from "../controllers/team";
+import { addMembersToTeam, fetchTeams } from "../controllers/team.js";
 const teamRouter = express.Router();
 
 teamRouter.get("/fetchTeams/:id/:orgId", async (req, res) => {

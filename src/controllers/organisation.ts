@@ -1,16 +1,16 @@
 import User from "../models/user";
 import { Request, Response } from "express";
 import { v4 as uuid } from "uuid";
-import { BUCKET_NAME, RAZORPAY_KEY_SECRET } from "../utils/config";
+import { BUCKET_NAME, RAZORPAY_KEY_SECRET } from "../utils/config.js";
 import {
   generatePresignedDownloadUrl,
   s3,
   uploadToS3,
-} from "../utils/s3.config";
-import { addProfilePicURL, convertSize, errorResponse } from "../utils/helper";
-import Organisation from "../models/organistion";
-import Team from "../models/team";
-import Storage from "../models/storage";
+} from "../utils/s3.config.js";
+import { addProfilePicURL, convertSize, errorResponse } from "../utils/helper.js";
+import Organisation from "../models/organistion.js";
+import Team from "../models/team.js";
+import Storage from "../models/storage.js";
 import { razorpay } from "../utils/razorpay";
 import crypto from "crypto";
 

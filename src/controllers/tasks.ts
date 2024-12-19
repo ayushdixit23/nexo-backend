@@ -1,10 +1,10 @@
 import { Request, Response } from "express";
-import User from "../models/user";
-import Task from "../models/tasks";
-import Organisation from "../models/organistion";
-import Team from "../models/team";
+import User from "../models/user.js";
+import Task from "../models/tasks.js";
+import Organisation from "../models/organistion.js";
+import Team from "../models/team.js";
 import mongoose from "mongoose";
-import { addProfilePicURL } from "../utils/helper";
+import { addProfilePicURL } from "../utils/helper.js";
 
 export const createIndividualTask = async (req: Request, res: Response) => {
   try {

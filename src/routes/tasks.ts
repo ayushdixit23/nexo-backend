@@ -5,7 +5,7 @@ import {
   fetchIndividualTasks,
   fetchTasks,
   updateTasksStatus,
-} from "../controllers/tasks";
+} from "../controllers/tasks.js";
 const tasksRouter = express.Router();
 
 tasksRouter.post("/createIndividualTask/:id", async (req, res) => {

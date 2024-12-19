@@ -1,5 +1,5 @@
 import express from "express";
-import upload from "../middleware/multer";
+import upload from "../middleware/multer.js";
 import {
   addStorage,
   createOrderRazoryPay,
@@ -16,7 +16,7 @@ import {
   joinOrganisation,
   searchOrganisation,
   verifyPayment,
-} from "../controllers/organisation";
+} from "../controllers/organisation.js";
 
 const organisationRouter = express.Router();
 

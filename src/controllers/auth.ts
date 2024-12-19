@@ -1,8 +1,8 @@
-import User from "../models/user";
+import User from "../models/user.js";
 import { Request, Response } from "express";
 import { v4 as uuid } from "uuid";
-import { BUCKET_NAME } from "../utils/config";
-import { uploadToS3 } from "../utils/s3.config";
+import { BUCKET_NAME } from "../utils/config.js";
+import { uploadToS3 } from "../utils/s3.config.js";
 import {
   addProfilePicURL,
   errorResponse,
@@ -10,7 +10,7 @@ import {
   hashPassword,
   verifyPassword,
 } from "../utils/helper";
-import Organisation from "../models/organistion";
+import Organisation from "../models/organistion.js";
 
 export const createUser = async (
   req: Request,

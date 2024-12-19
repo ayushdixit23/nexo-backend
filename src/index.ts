@@ -2,19 +2,19 @@ import express, { NextFunction, Request, Response } from "express";
 import cors from "cors";
 import morgan from "morgan";
 import { DATABASE, PORT } from "./utils/config.js";
-import connectDb from "./utils/db";
-import userRouter from "./routes/auth";
-import organisationRouter from "./routes/organisation";
-import { register, requestCount, requestDuration } from "./utils/metrics";
+import connectDb from "./utils/db.js";
+import userRouter from "./routes/auth.js";
+import organisationRouter from "./routes/organisation.js";
+import { register, requestCount, requestDuration } from "./utils/metrics.js";
 import http from "http";
 import { Server, Socket } from "socket.io";
-import chatRouter from "./routes/conversation";
+import chatRouter from "./routes/conversation.js";
 import {
   storeMessageToDB,
   storeMessageToDBForTeam,
-} from "./controllers/conversation";
-import teamRouter from "./routes/team";
-import tasksRouter from "./routes/tasks";
+} from "./controllers/conversation.js";
+import teamRouter from "./routes/team.js";
+import tasksRouter from "./routes/tasks.js";
 
 const app = express();
 
