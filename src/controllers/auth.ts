@@ -9,7 +9,7 @@ import {
   generateToken,
   hashPassword,
   verifyPassword,
-} from "../utils/helper";
+} from "../utils/helper.js";
 import Organisation from "../models/organistion.js";
 
 export const createUser = async (

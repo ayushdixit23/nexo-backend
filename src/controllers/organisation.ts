@@ -1,4 +1,4 @@
-import User from "../models/user";
+import User from "../models/user.js";
 import { Request, Response } from "express";
 import { v4 as uuid } from "uuid";
 import { BUCKET_NAME, RAZORPAY_KEY_SECRET } from "../utils/config.js";
@@ -11,7 +11,7 @@ import { addProfilePicURL, convertSize, errorResponse } from "../utils/helper.js
 import Organisation from "../models/organistion.js";
 import Team from "../models/team.js";
 import Storage from "../models/storage.js";
-import { razorpay } from "../utils/razorpay";
+import { razorpay } from "../utils/razorpay.js";
 import crypto from "crypto";
 
 export const createOrganisation = async (
